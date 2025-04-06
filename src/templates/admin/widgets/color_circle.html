@@ -1,0 +1,107 @@
+<div class="color-select-container" id="color-select-{{ widget.name }}-{{ widget.attrs.id }}">
+    <div class="color-options">
+        {% for group_name, group_choices, group_index in widget.optgroups %}
+            {% for option in group_choices %}
+                <div class="color-circle {% if option.selected %}selected{% endif %}" 
+                     data-value="{{ option.value }}" 
+                     style="background-color: #{{ option.value }};"
+                     title="{{ option.label }}"
+                     role="button"
+                     tabindex="0">
+                </div>
+            {% endfor %}
+        {% endfor %}
+    </div>
+    <select name="{{ widget.name }}" id="{{ widget.attrs.id }}" class="color-select" style="display: none;">
+        {% for group_name, group_choices, group_index in widget.optgroups %}
+            {% for option in group_choices %}
+                <option value="{{ option.value }}" {% if option.selected %}selected{% endif %}>
+                    {{ option.label }}
+                </option>
+            {% endfor %}
+        {% endfor %}
+    </select>
+</div>
+
+<style>
+    .color-select-container {
+        margin: 10px 0;
+    }
+    .color-options {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+    .color-circle {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        border: 2px solid #ccc;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    .color-circle:hover {
+        transform: scale(1.1);
+        border-color: #888;
+    }
+    .color-circle.selected {
+        border-color: #000;
+        transform: scale(1.2);
+        box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const initColorSelect = function(container) {
+            const colorOptions = container.querySelectorAll('.color-circle');
+            const select = container.querySelector('select.color-select');
+
+            function updateSelection(selectedCircle) {
+                // Remove selected class from all circles in this container
+                colorOptions.forEach(circle => circle.classList.remove('selected'));
+                
+                // Add selected class to clicked circle
+                selectedCircle.classList.add('selected');
+                
+                // Update select value
+                select.value = selectedCircle.dataset.value;
+                
+                // Trigger change event
+                const event = new Event('change', { bubbles: true });
+                select.dispatchEvent(event);
+            }
+
+            // Add click handlers to all color circles
+            colorOptions.forEach(circle => {
+                circle.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    updateSelection(this);
+                });
+                
+                // Add keyboard support
+                circle.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        updateSelection(this);
+                    }
+                });
+            });
+
+            // Set initial selection
+            const initialValue = select.value;
+            if (initialValue) {
+                const selectedCircle = container.querySelector(`.color-circle[data-value="${initialValue}"]`);
+                if (selectedCircle) {
+                    selectedCircle.classList.add('selected');
+                }
+            }
+        };
+
+        // Initialize all color select containers on the page
+        document.querySelectorAll('.color-select-container').forEach(container => {
+            initColorSelect(container);
+        });
+    });
+</script>

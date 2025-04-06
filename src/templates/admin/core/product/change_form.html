@@ -1,0 +1,54 @@
+{% extends "admin/change_form.html" %}
+{% load static %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+  .color-swatch {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    margin-right: 8px;
+    border: 1px solid #ccc;
+    vertical-align: middle;
+  }
+  
+  /* Style for the select2 dropdown */
+  .select2-container--default .select2-results__option .color-swatch {
+    margin-right: 8px;
+  }
+</style>
+
+<script type="text/javascript" src="{% static 'admin/js/vendor/jquery/jquery.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'admin/js/jquery.init.js' %}"></script>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<script type="text/javascript">
+  django.jQuery(document).ready(function() {
+    // Initialize Select2 for all inline color selects
+    django.jQuery('.inline-group select[name$="-name"]').each(function() {
+      django.jQuery(this).select2({
+        width: '100%',
+        templateResult: formatColorOption,
+        templateSelection: formatColorOption
+      });
+    });
+    
+    function formatColorOption(option) {
+      if (!option.id) {
+        return option.text;
+      }
+      
+      // Create the color swatch
+      var $option = django.jQuery(
+        '<span><span class="color-swatch" style="background-color: #' + 
+        option.id + ';"></span>' + option.text + '</span>'
+      );
+      
+      return $option;
+    }
+  });
+</script>
+{% endblock %}

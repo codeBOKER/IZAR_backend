@@ -1,0 +1,103 @@
+{% load static %}
+<div class="color-select-container">
+    <select name="{{ widget.name }}"{% include "django/forms/widgets/attrs.html" %}>
+        {% for group_name, group_choices, group_index in widget.optgroups %}
+            {% if group_name %}
+                <optgroup label="{{ group_name }}">
+            {% endif %}
+            {% for option in group_choices %}
+                <option value="{{ option.value }}" 
+                        {% if option.selected %}selected{% endif %}
+                        data-color="{{ option.value }}">
+                    {{ option.label }}
+                </option>
+            {% endfor %}
+            {% if group_name %}
+                </optgroup>
+            {% endif %}
+        {% endfor %}
+    </select>
+    <script>
+        (function() {
+            // Add color swatches to each option
+            const select = document.querySelector('select[name="{{ widget.name }}"]');
+            const options = select.querySelectorAll('option');
+            
+            options.forEach(option => {
+                const color = option.getAttribute('data-color');
+                if (color) {
+                    option.innerHTML = `<span style="display: inline-block; width: 12px; height: 12px; background-color: #${color}; margin-right: 5px; border: 1px solid #ccc;"></span> ${option.innerHTML}`;
+                }
+            });
+            
+            // Update the color swatch when selection changes
+            select.addEventListener('change', function() {
+                const selectedOption = this.options[this.selectedIndex];
+                const color = selectedOption.getAttribute('data-color');
+                const swatch = this.parentNode.querySelector('.color-option');
+                
+                if (swatch && color) {
+                    swatch.style.backgroundColor = `#${color}`;
+                }
+            });
+        })();
+    </script>
+</div>
+{% load static %}
+<div class="color-select-container">
+    <div class="color-options">
+        {% for group_name, group_choices, group_index in widget.optgroups %}
+            {% for option in group_choices %}
+                <div class="color-circle {% if option.selected %}selected{% endif %}" 
+                     data-value="{{ option.value }}" 
+                     style="background-color: #{{ option.value }};"
+                     title="{{ option.label }}">
+                </div>
+            {% endfor %}
+        {% endfor %}
+    </div>
+    <input type="hidden" name="{{ widget.name }}" value="{% for group_choices in widget.optgroups %}{% for option in group_choices %}{% if option.selected %}{{ option.value }}{% endif %}{% endfor %}{% endfor %}">
+    <script>
+        (function() {
+            const colorOptions = document.querySelectorAll('.color-circle');
+            const hiddenInput = document.querySelector('input[name="{{ widget.name }}"]');
+
+            colorOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    // Remove 'selected' class from all circles
+                    colorOptions.forEach(opt => opt.classList.remove('selected'));
+                    
+                    // Add 'selected' class to the clicked circle
+                    this.classList.add('selected');
+                    
+                    // Update the hidden input value
+                    hiddenInput.value = this.getAttribute('data-value');
+                });
+            });
+        })();
+    </script>
+</div>
+
+<style>
+    .color-options {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    .color-circle {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        border: 2px solid #ccc;
+        cursor: pointer;
+        transition: transform 0.2s, border-color 0.2s;
+    }
+    .color-circle:hover {
+        transform: scale(1.1);
+        border-color: #888;
+    }
+    .color-circle.selected {
+        border-color: #000;
+        transform: scale(1.2);
+    }
+</style>
