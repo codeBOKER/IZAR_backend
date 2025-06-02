@@ -60,3 +60,6 @@ coverage.xml
 
 # Pyre type checker
 .pyre/
+
+# Environment variable files
+.env
