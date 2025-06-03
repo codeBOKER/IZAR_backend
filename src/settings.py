@@ -10,6 +10,8 @@ load_dotenv()  # Load environment variables from .env file
 SECRET_KEY = os.getenv('SECRET_KEY', 'fallback-secret-key')
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
+ALLOWED_HOSTS = ['*'] if DEBUG else os.getenv('ALLOWED_HOSTS', '').split(',') 
+
 # Add other settings below
 INSTALLED_APPS = [
     'django.contrib.admin',
