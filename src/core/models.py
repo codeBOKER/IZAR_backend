@@ -23,16 +23,6 @@ class Product(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     is_active = models.BooleanField(default=True)
 
-    SIZES = [
-        ('XS', 'Extra Small'),
-        ('S', 'Small'),
-        ('M', 'Medium'),
-        ('L', 'Large'),
-        ('XL', 'Extra Large'),
-        ('XXL', 'Double Extra Large'),
-    ]
-    available_sizes = models.JSONField(default=list)  # Store list of available sizes
-
     def get_available_sizes_display(self):
         """Return a list of human-readable size names."""
         if not self.available_sizes:
@@ -105,3 +95,25 @@ class ProductColor(models.Model):
 
     def __str__(self):
         return f"{self.product.header} - {self.get_color_display_name()}"
+
+class Review(models.Model):
+    name = models.CharField(max_length=100)
+    job_description = models.CharField(max_length=100)
+    image = models.ImageField(upload_to='reviews/')
+    review = models.PositiveSmallIntegerField(choices=[(i, str(i)) for i in range(1, 6)])
+    feedback = models.TextField()
+    view = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.name} ({self.review}/5)"
+
+class Email(models.Model):
+    name = models.CharField(max_length=100)
+    email = models.EmailField()
+    phone_number = models.CharField(max_length=20)
+    topic = models.CharField(max_length=200)
+    message = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.name} - {self.topic} ({self.email})"

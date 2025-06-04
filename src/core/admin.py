@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import Category, Product, ProductColor
+from .models import Category, Product, ProductColor, Review, Email
 from .forms import ProductAdminForm, ProductColorAdminForm
 
 @admin.register(Category)
@@ -41,7 +41,7 @@ class ProductColorInline(admin.TabularInline):
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
     form = ProductAdminForm
-    list_display = ['header', 'category', 'price', 'is_active', 'display_sizes', 'color_count']
+    list_display = ['header', 'category', 'price', 'is_active', 'color_count']
     list_filter = ['category', 'is_active']
     search_fields = ['header', 'description']
     inlines = [ProductColorInline]
@@ -49,10 +49,6 @@ class ProductAdmin(admin.ModelAdmin):
     fieldsets = [
         ('Basic Information', {
             'fields': ['header', 'category', 'description', 'price', 'is_active']
-        }),
-        ('Available Sizes', {
-            'fields': ['sizes'],
-            'classes': ['wide']
         }),
     ]
 
@@ -65,14 +61,6 @@ class ProductAdmin(admin.ModelAdmin):
         """Call full_clean to trigger the model's validation."""
         obj.full_clean()
         super().save_model(request, obj, form, change)
-
-    def display_sizes(self, obj):
-        """Display the available sizes as a comma-separated string."""
-        sizes = obj.get_available_sizes_display()
-        if not sizes:
-            return '-'
-        return ', '.join(sizes)
-    display_sizes.short_description = 'Available Sizes'
 
 @admin.register(ProductColor)
 class ProductColorAdmin(admin.ModelAdmin):
@@ -106,3 +94,7 @@ class ProductColorAdmin(admin.ModelAdmin):
             messages.warning(request, f"Cannot delete the color '{obj.name}' as it is the last color for the product '{obj.product.header}'. A product must have at least one color.")
 
         return can_delete
+
+admin.site.register(Review)
+
+admin.site.register(Email)
