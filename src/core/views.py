@@ -5,7 +5,8 @@ from .models import Category, Review, Product
 from .serializers import ReviewSerializer, ProductSerializer,CategorySerializer, EmailSerializer
 from rest_framework.pagination import PageNumberPagination
 from django.core.mail import send_mail
-from settings import EMAILS as RECIPIENTS_EMAILS
+from django.conf import settings
+
 
 
 @api_view(['GET',])
@@ -81,7 +82,7 @@ def email_view(request):
             subject=f"New message from {name}: ({phone})",
             message=f"{topic}\n{message}",
             from_email=email,  
-            recipient_list=RECIPIENTS_EMAILS,
+            recipient_list=settings.EMAILS,
             fail_silently=False,
         )
 
