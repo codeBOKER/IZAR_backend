@@ -79,10 +79,10 @@ def email_view(request):
 
         # send the email
         send_mail(
-            subject=f"New message from {name}: ({phone})",
-            message=f"{topic}\n{message}",
+            subject=f"New message from {name}: (izar site)",
+            message=f"{topic}\n{message}\n{phone}",
             from_email=email,  
-            recipient_list=settings.EMAILS,
+            recipient_list=settings.EMAILS[:0],
             fail_silently=False,
         )
 
