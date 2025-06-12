@@ -1,13 +1,18 @@
 from django.contrib import admin
 from django.utils.html import format_html
 from .models import Category, Product, ProductColor, Review, Email
-from .forms import ProductAdminForm, ProductColorAdminForm
+from .forms import ProductAdminForm, ProductColorAdminForm, CategoryAdminForm
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ['header', 'is_active', 'created_at']
+    form = CategoryAdminForm
+    list_display = ['header', 'is_active', 'created_at', 'display_sizes']
     list_filter = ['is_active']
     search_fields = ['header', 'description']
+
+    def display_sizes(self, obj):
+        return ', '.join(obj.get_sizes_display())
+    display_sizes.short_description = 'Sizes'
 
 class ProductColorInline(admin.TabularInline):
     model = ProductColor

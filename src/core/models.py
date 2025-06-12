@@ -7,12 +7,34 @@ class Category(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     is_active = models.BooleanField(default=True)
+    SIZES = [
+        ('S', 'Small'),
+        ('M', 'Medium'),
+        ('L', 'Large'),
+        ('XL', 'Extra Large'),
+        ('2XL', '2X Large'),
+        ('3XL', '3X Large'),
+        ('4XL', '4X Large'),
+        ('5XL', '5X Large'),
+        ('6XL', '6X Large'),
+    ]
+    sizes = models.TextField(
+        blank=True,
+        help_text="Comma-separated list of available sizes (e.g., S,M,L,XL)"
+    )
 
     class Meta:
         verbose_name_plural = 'Categories'
 
     def __str__(self):
         return self.header
+
+    def get_sizes_display(self):
+        """Return a list of human-readable size names for the category."""
+        if not self.sizes:
+            return []
+        size_dict = dict(self.SIZES)
+        return [size_dict.get(size.strip(), size.strip()) for size in self.sizes.split(',') if size.strip()]
 
 class Product(models.Model):
     category = models.ForeignKey(Category, related_name='products', on_delete=models.CASCADE)
