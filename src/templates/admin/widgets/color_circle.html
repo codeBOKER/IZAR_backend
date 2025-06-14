@@ -4,7 +4,7 @@
             {% for option in group_choices %}
                 <div class="color-circle {% if option.selected %}selected{% endif %}" 
                      data-value="{{ option.value }}" 
-                     style="background-color: #{{ option.value }};"
+                     {% if option.value %}style="background-color: #{{ option.value }};"{% endif %}
                      title="{{ option.label }}"
                      role="button"
                      tabindex="0">
@@ -53,54 +53,51 @@
 </style>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const initColorSelect = function(container) {
-            const colorOptions = container.querySelectorAll('.color-circle');
-            const select = container.querySelector('select.color-select');
+    function initColorSelect(container) {
+        const colorOptions = container.querySelectorAll('.color-circle');
+        const select = container.querySelector('select.color-select');
 
-            function updateSelection(selectedCircle) {
-                // Remove selected class from all circles in this container
-                colorOptions.forEach(circle => circle.classList.remove('selected'));
-                
-                // Add selected class to clicked circle
-                selectedCircle.classList.add('selected');
-                
-                // Update select value
-                select.value = selectedCircle.dataset.value;
-                
-                // Trigger change event
-                const event = new Event('change', { bubbles: true });
-                select.dispatchEvent(event);
-            }
+        function updateSelection(selectedCircle) {
+            colorOptions.forEach(circle => circle.classList.remove('selected'));
+            selectedCircle.classList.add('selected');
+            select.value = selectedCircle.dataset.value;
+            const event = new Event('change', { bubbles: true });
+            select.dispatchEvent(event);
+        }
 
-            // Add click handlers to all color circles
-            colorOptions.forEach(circle => {
-                circle.addEventListener('click', function(e) {
+        colorOptions.forEach(circle => {
+            circle.addEventListener('click', function(e) {
+                e.preventDefault();
+                updateSelection(this);
+            });
+            circle.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
                     updateSelection(this);
-                });
-                
-                // Add keyboard support
-                circle.addEventListener('keydown', function(e) {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        updateSelection(this);
-                    }
-                });
-            });
-
-            // Set initial selection
-            const initialValue = select.value;
-            if (initialValue) {
-                const selectedCircle = container.querySelector(`.color-circle[data-value="${initialValue}"]`);
-                if (selectedCircle) {
-                    selectedCircle.classList.add('selected');
                 }
-            }
-        };
+            });
+        });
 
-        // Initialize all color select containers on the page
+        // Set initial selection
+        const initialValue = select.value;
+        if (initialValue) {
+            const selectedCircle = container.querySelector(`.color-circle[data-value="${initialValue}"]`);
+            if (selectedCircle) {
+                selectedCircle.classList.add('selected');
+            }
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('.color-select-container').forEach(container => {
+            initColorSelect(container);
+        });
+    });
+
+    // Listen for Django inline formset additions
+    document.addEventListener('formset:added', function(event) {
+        // event.target is the new inline row
+        event.target.querySelectorAll('.color-select-container').forEach(container => {
             initColorSelect(container);
         });
     });

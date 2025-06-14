@@ -9,6 +9,7 @@ class CategoryAdmin(admin.ModelAdmin):
     list_display = ['header', 'is_active', 'created_at', 'display_sizes']
     list_filter = ['is_active']
     search_fields = ['header', 'description']
+    fields = ['header', 'description', 'image', 'image_upload', 'is_active', 'sizes']
 
     def display_sizes(self, obj):
         return ', '.join(obj.get_sizes_display())
@@ -18,9 +19,22 @@ class ProductColorInline(admin.TabularInline):
     model = ProductColor
     form = ProductColorAdminForm
     extra = 1  # Number of empty forms to display
-    fields = ['name', 'image', 'is_available']
+    fields = ['name', 'color_preview', 'image', 'image_upload', 'is_available']
+    readonly_fields = ['color_preview', 'image']
     min_num = 1  # Require at least one color
     validate_min = True  # Enforce the minimum number
+
+    def color_preview(self, obj):
+        if obj and obj.name:
+            return format_html(
+                '<div style="display: flex; align-items: center;">'
+                '<div style="width: 24px; height: 24px; border-radius: 50%; background-color: #{}; margin-right: 8px; border: 1px solid #ccc;"></div>'
+                '{}'
+                '</div>',
+                obj.name, obj.get_color_display_name()
+            )
+        return ""
+    color_preview.short_description = 'Color Preview'
 
     def has_delete_permission(self, request, obj=None):
         """Prevent deleting the last color in the inline form."""

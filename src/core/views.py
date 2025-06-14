@@ -1,11 +1,12 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
-from .models import Category, Review, Product
+from .models import Category, Review, Product, Email
 from .serializers import ReviewSerializer, ProductSerializer,CategorySerializer, EmailSerializer
 from rest_framework.pagination import PageNumberPagination
 from django.core.mail import send_mail
 from django.conf import settings
+from rest_framework.generics import get_object_or_404
 
 
 
@@ -39,24 +40,20 @@ def review_view(request):
 
 @api_view(['GET',])
 def category_products_view(request, id):
-    try:
-        category = Category.objects.get(id=id)
-    except Category.DoesNotExist:
-        return Response({"detail": "Category not found."}, status=status.HTTP_404_NOT_FOUND)
-    except Exception as e:
-        return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
+    category = get_object_or_404(Category, id=id)
     products = Product.objects.filter(category=category).order_by('-created_at')
 
     paginator = PageNumberPagination()
     paginated_products = paginator.paginate_queryset(products, request)
 
-    serializer_product= ProductSerializer(paginated_products, many=True)
-    serializer_category= CategorySerializer(category)
-    
+    serializer_product = ProductSerializer(paginated_products, many=True)
+    serializer_category = CategorySerializer(category)
+
     return Response({
         'category': serializer_category.data,
         'products': serializer_product.data,
+        'total_pages': paginator.page.paginator.num_pages if hasattr(paginator, 'page') and hasattr(paginator.page, 'paginator') else 1,
+        'current_page': int(request.query_params.get(paginator.page_query_param, 1))
     }, status=status.HTTP_200_OK)
 
 @api_view(['GET',])
@@ -64,8 +61,13 @@ def product_view(request):
     products = Product.objects.all()
     paginator = PageNumberPagination()
     paginated_products = paginator.paginate_queryset(products, request)
+
     serializer=ProductSerializer(paginated_products, many=True)
-    return Response(serializer.data, status=status.HTTP_200_OK)
+    return Response({
+        'products': serializer.data,
+        'total_pages': paginator.page.paginator.num_pages if hasattr(paginator, 'page') and hasattr(paginator.page, 'paginator') else 1,
+        'current_page': int(request.query_params.get(paginator.page_query_param, 1))
+    }, status=status.HTTP_200_OK)
 
 @api_view(['POST',])
 def email_view(request):
@@ -73,19 +75,21 @@ def email_view(request):
     if serializer.is_valid():
         name = serializer.validated_data['name']
         email = serializer.validated_data['email']
-        phone= serializer.validated_data['phone_number']
+        phone_number= serializer.validated_data['phone_number']
         message = serializer.validated_data['message']
         topic = serializer.validated_data['topic']
 
         # send the email
         send_mail(
             subject=f"New message from {name}: (izar site)",
-            message=f"{topic}\n{message}\n{phone}",
+            message=f"{topic}\n{message}\n{phone_number}",
             from_email=email,  
             recipient_list=settings.EMAILS[:0],
             fail_silently=False,
         )
-
+        Email.objects.create(name=name, email=email, phone_number=phone_number,
+                             message=message, topic=topic)
+        
         return Response(
             {'message': 'Email sent successfully!'},
             status=status.HTTP_200_OK

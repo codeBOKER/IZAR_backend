@@ -1,9 +1,11 @@
+import requests
 from django.db import models
+from .utils import upload_image_to_imgur
 
 class Category(models.Model):
     header = models.CharField(max_length=100)
     description = models.TextField()
-    image = models.ImageField(upload_to='categories/')
+    image = models.URLField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     is_active = models.BooleanField(default=True)
@@ -35,6 +37,12 @@ class Category(models.Model):
             return []
         size_dict = dict(self.SIZES)
         return [size_dict.get(size.strip(), size.strip()) for size in self.sizes.split(',') if size.strip()]
+
+    def save(self, *args, **kwargs):
+        image_file = kwargs.pop('image_file', None)
+        if image_file:
+            self.image = upload_image_to_imgur(image_file)
+        super().save(*args, **kwargs)
 
 class Product(models.Model):
     category = models.ForeignKey(Category, related_name='products', on_delete=models.CASCADE)
@@ -86,11 +94,13 @@ class ProductColor(models.Model):
     product = models.ForeignKey(Product, related_name='colors', on_delete=models.CASCADE)
     name = models.CharField(max_length=50, choices=COLOR_CHOICES, help_text="Select a color")
     color_code = models.CharField(max_length=7, editable=False)  # Will be set automatically based on name
-    image = models.ImageField(upload_to='products/')
+    image = models.URLField(blank=True, null=True)  # Store Imgur link as 'image'
     is_available = models.BooleanField(default=True)
 
     def save(self, *args, **kwargs):
-        # Set the color_code based on the selected name
+        image_file = kwargs.pop('image_file', None)
+        if image_file:
+            self.image = upload_image_to_imgur(image_file)
         for code, _ in self.COLOR_CHOICES:
             if self.name == code:
                 self.color_code = f'#{code}'
@@ -121,10 +131,16 @@ class ProductColor(models.Model):
 class Review(models.Model):
     name = models.CharField(max_length=100)
     job_description = models.CharField(max_length=100)
-    image = models.ImageField(upload_to='reviews/')
+    image = models.URLField(blank=True, null=True)  # Store Imgur link as 'image'
     review = models.PositiveSmallIntegerField(choices=[(i, str(i)) for i in range(1, 6)])
     feedback = models.TextField()
     view = models.BooleanField(default=False)
+
+    def save(self, *args, **kwargs):
+        image_file = kwargs.pop('image_file', None)
+        if image_file:
+            self.image = upload_image_to_imgur(image_file)
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.name} ({self.review}/5)"

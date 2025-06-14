@@ -16,7 +16,7 @@ class ProductSerializer(serializers.ModelSerializer):
     colors = ProductColorSerializer(many=True, read_only=True)
     class Meta:
         model = Product
-        fields = '__all__'
+        fields = ['id', 'header', 'description', 'category', 'colors']
 
 
 class ReviewSerializer(serializers.ModelSerializer):
