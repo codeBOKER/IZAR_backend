@@ -7,6 +7,7 @@ from rest_framework.pagination import PageNumberPagination
 from django.core.mail import send_mail
 from django.conf import settings
 from rest_framework.generics import get_object_or_404
+from django.db.models import Q
 
 
 
@@ -43,6 +44,12 @@ def category_products_view(request, id):
     category = get_object_or_404(Category, id=id)
     products = Product.objects.filter(category=category).order_by('-created_at')
 
+    search_query = request.GET.get('search')
+    if search_query:
+        products = products.filter(
+            Q(header__icontains=search_query) | Q(description__icontains=search_query)
+        )
+
     paginator = PageNumberPagination()
     paginated_products = paginator.paginate_queryset(products, request)
 
@@ -59,6 +66,13 @@ def category_products_view(request, id):
 @api_view(['GET',])
 def product_view(request):
     products = Product.objects.all()
+
+    search_query = request.GET.get('search')
+    if search_query:
+        products = products.filter(
+            Q(header__icontains=search_query) | Q(description__icontains=search_query)
+        )
+        
     paginator = PageNumberPagination()
     paginated_products = paginator.paginate_queryset(products, request)
 
