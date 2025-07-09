@@ -41,7 +41,12 @@ class Category(models.Model):
     def save(self, *args, **kwargs):
         image_file = kwargs.pop('image_file', None)
         if image_file:
-            self.image = upload_image_to_imgur(image_file)
+            uploaded_url = upload_image_to_imgur(image_file)
+            if uploaded_url:
+                self.image = uploaded_url
+            else:
+                from .utils import handle_image_upload_failure
+                handle_image_upload_failure(self, 'image')
         super().save(*args, **kwargs)
 
 class Product(models.Model):
@@ -100,7 +105,12 @@ class ProductColor(models.Model):
     def save(self, *args, **kwargs):
         image_file = kwargs.pop('image_file', None)
         if image_file:
-            self.image = upload_image_to_imgur(image_file)
+            uploaded_url = upload_image_to_imgur(image_file)
+            if uploaded_url:
+                self.image = uploaded_url
+            else:
+                from .utils import handle_image_upload_failure
+                handle_image_upload_failure(self, 'image')
         for code, _ in self.COLOR_CHOICES:
             if self.name == code:
                 self.color_code = f'#{code}'
@@ -139,7 +149,12 @@ class Review(models.Model):
     def save(self, *args, **kwargs):
         image_file = kwargs.pop('image_file', None)
         if image_file:
-            self.image = upload_image_to_imgur(image_file)
+            uploaded_url = upload_image_to_imgur(image_file)
+            if uploaded_url:
+                self.image = uploaded_url
+            else:
+                from .utils import handle_image_upload_failure
+                handle_image_upload_failure(self, 'image')
         super().save(*args, **kwargs)
 
     def __str__(self):
