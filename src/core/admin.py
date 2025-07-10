@@ -81,39 +81,6 @@ class ProductAdmin(admin.ModelAdmin):
         obj.full_clean()
         super().save_model(request, obj, form, change)
 
-@admin.register(ProductColor)
-class ProductColorAdmin(admin.ModelAdmin):
-    form = ProductColorAdminForm
-    list_display = ['product', 'color_display', 'is_available']
-    list_filter = ['is_available']
-    search_fields = ['name', 'product__header']
-
-    def color_display(self, obj):
-        """Display the color as a colored circle with the name."""
-        return format_html(
-            '<div style="display: flex; align-items: center;">' +
-            '<div style="width: 20px; height: 20px; border-radius: 50%; ' +
-            'background-color: #{0}; margin-right: 10px; border: 1px solid #ccc;"></div>' +
-            '{1}</div>',
-            obj.name, obj.get_color_display_name()
-        )
-    color_display.short_description = 'Color'
-
-    def has_delete_permission(self, request, obj=None):
-        """Check if this color can be deleted."""
-        if obj is None:
-            return True  # Allow access to the delete action in general
-
-        # Prevent deleting if this is the last color for the product
-        can_delete = obj.product.colors.count() > 1
-
-        # Add a message if this is the last color
-        if not can_delete and request:
-            from django.contrib import messages
-            messages.warning(request, f"Cannot delete the color '{obj.name}' as it is the last color for the product '{obj.product.header}'. A product must have at least one color.")
-
-        return can_delete
-
 admin.site.register(Review)
 
 admin.site.register(Email)
