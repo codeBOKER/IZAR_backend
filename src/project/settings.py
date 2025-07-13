@@ -185,3 +185,6 @@ REST_FRAMEWORK = {
 }
 
 IMGUR_CLIENT_ID = os.environ.get('IMGUR_CLIENT_ID', '')
+
+# Frontend URL for admin "View site" link
+FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:3000')

@@ -1,6 +1,9 @@
 from django.contrib import admin
+from django.contrib.auth.models import User, Group
+from django.contrib.auth.admin import UserAdmin, GroupAdmin
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
+from django.conf import settings
 from .models import Category, Product, ProductColor, Review, Email
 from .forms import ProductAdminForm, ProductColorAdminForm, CategoryAdminForm
 
@@ -82,6 +85,24 @@ class ProductAdmin(admin.ModelAdmin):
         obj.full_clean()
         super().save_model(request, obj, form, change)
 
-admin.site.register(Review)
+# Override the view site URL to point to frontend
+class CustomAdminSite(admin.AdminSite):
+    def each_context(self, request):
+        context = super().each_context(request)
+        frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:3000')
+        context['site_url'] = frontend_url
+        return context
 
-admin.site.register(Email)
+# Replace default admin site
+admin_site = CustomAdminSite(name='admin')
+admin_site.site_header = "ادارة موقع ازار"
+admin_site.site_title = "مشرف ازار"
+admin_site.index_title = "مرحبا بك في ادارة موقع ازار"
+
+# Re-register all models with custom admin site
+admin_site.register(User, UserAdmin)
+admin_site.register(Group, GroupAdmin)
+admin_site.register(Category, CategoryAdmin)
+admin_site.register(Product, ProductAdmin)
+admin_site.register(Review)
+admin_site.register(Email)
