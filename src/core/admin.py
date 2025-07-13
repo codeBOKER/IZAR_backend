@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.utils.html import format_html
+from django.utils.translation import gettext_lazy as _
 from .models import Category, Product, ProductColor, Review, Email
 from .forms import ProductAdminForm, ProductColorAdminForm, CategoryAdminForm
 
@@ -13,7 +14,7 @@ class CategoryAdmin(admin.ModelAdmin):
 
     def display_sizes(self, obj):
         return ', '.join(obj.get_sizes_display())
-    display_sizes.short_description = 'Sizes'
+    display_sizes.short_description = _('Sizes')
 
 class ProductColorInline(admin.TabularInline):
     model = ProductColor
@@ -34,7 +35,7 @@ class ProductColorInline(admin.TabularInline):
                 obj.name, obj.get_color_display_name()
             )
         return ""
-    color_preview.short_description = 'Color Preview'
+    color_preview.short_description = _('Color Preview')
 
     def has_delete_permission(self, request, obj=None):
         """Prevent deleting the last color in the inline form."""
@@ -51,7 +52,7 @@ class ProductColorInline(admin.TabularInline):
             # If it has only one color, show a message and prevent deletion
             if request:
                 from django.contrib import messages
-                messages.warning(request, f"Cannot delete the last color of product '{obj.header}'. A product must have at least one color.")
+                messages.warning(request, _(f"Cannot delete the last color of product '{obj.header}'. A product must have at least one color."))
             return False
 
         # Default to allowing deletion
@@ -66,7 +67,7 @@ class ProductAdmin(admin.ModelAdmin):
     inlines = [ProductColorInline]
 
     fieldsets = [
-        ('Basic Information', {
+        (_('Basic Information'), {
             'fields': ['header', 'category', 'description', 'price', 'is_active']
         }),
     ]
@@ -74,7 +75,7 @@ class ProductAdmin(admin.ModelAdmin):
     def color_count(self, obj):
         """Display the number of colors for this product."""
         return obj.colors.count()
-    color_count.short_description = 'Colors'
+    color_count.short_description = _('Colors')
 
     def save_model(self, request, obj, form, change):
         """Call full_clean to trigger the model's validation."""

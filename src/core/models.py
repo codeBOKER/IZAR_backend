@@ -1,32 +1,35 @@
 import requests
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 from .utils import upload_image_to_imgur
 
 class Category(models.Model):
-    header = models.CharField(max_length=100)
-    description = models.TextField()
-    image = models.URLField(blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    is_active = models.BooleanField(default=True)
+    header = models.CharField(_('العنوان'), max_length=100)
+    description = models.TextField(_('الوصف'))
+    image = models.URLField(_('الصورة'), blank=True, null=True)
+    created_at = models.DateTimeField(_('تاريخ الإنشاء'), auto_now_add=True)
+    updated_at = models.DateTimeField(_('تاريخ التحديث'), auto_now=True)
+    is_active = models.BooleanField(_('نشط'), default=True)
     SIZES = [
-        ('S', 'Small'),
-        ('M', 'Medium'),
-        ('L', 'Large'),
-        ('XL', 'Extra Large'),
-        ('2XL', '2X Large'),
-        ('3XL', '3X Large'),
-        ('4XL', '4X Large'),
-        ('5XL', '5X Large'),
-        ('6XL', '6X Large'),
+        ('S', _('صغير')),
+        ('M', _('متوسط')),
+        ('L', _('كبير')),
+        ('XL', _('كبير جدًا')),
+        ('2XL', _('2X كبير')),
+        ('3XL', _('3X كبير')),
+        ('4XL', _('4X كبير')),
+        ('5XL', _('5X كبير')),
+        ('6XL', _('6X كبير')),
     ]
     sizes = models.TextField(
+        _('المقاسات'),
         blank=True,
-        help_text="Comma-separated list of available sizes (e.g., S,M,L,XL)"
+        help_text=_('قائمة المقاسات المتوفرة مفصولة بفواصل (مثال: S,M,L,XL)')
     )
 
     class Meta:
-        verbose_name_plural = 'Categories'
+        verbose_name = _('القسم')
+        verbose_name_plural = _('الاقسام')
 
     def __str__(self):
         return self.header
@@ -36,7 +39,7 @@ class Category(models.Model):
         if not self.sizes:
             return []
         size_dict = dict(self.SIZES)
-        return [size_dict.get(size.strip(), size.strip()) for size in self.sizes.split(',') if size.strip()]
+        return [str(size_dict.get(size.strip(), size.strip())) for size in self.sizes.split(',') if size.strip()]
 
     def save(self, *args, **kwargs):
         image_file = kwargs.pop('image_file', None)
@@ -50,13 +53,13 @@ class Category(models.Model):
         super().save(*args, **kwargs)
 
 class Product(models.Model):
-    category = models.ForeignKey(Category, related_name='products', on_delete=models.CASCADE)
-    header = models.CharField(max_length=200)
-    description = models.TextField()
-    price = models.DecimalField(max_digits=10, decimal_places=2)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    is_active = models.BooleanField(default=True)
+    category = models.ForeignKey(Category, related_name='products', on_delete=models.CASCADE, verbose_name=_('القسم'))
+    header = models.CharField(_('العنوان'), max_length=200)
+    description = models.TextField(_('الوصف'))
+    price = models.DecimalField(_('السعر'), max_digits=10, decimal_places=2)
+    created_at = models.DateTimeField(_('تاريخ الإنشاء'), auto_now_add=True)
+    updated_at = models.DateTimeField(_('تاريخ التحديث'), auto_now=True)
+    is_active = models.BooleanField(_('نشط'), default=True)
 
     def get_available_sizes_display(self):
         """Return a list of human-readable size names."""
@@ -64,8 +67,8 @@ class Product(models.Model):
             return []
 
         # Create a dict mapping size codes to their display names
-        size_dict = dict(self.SIZES)
-        return [size_dict.get(size, size) for size in self.available_sizes]
+        size_dict = dict(Category.SIZES)
+        return [str(size_dict.get(size, size)) for size in self.available_sizes]
 
     def clean(self):
         """Validate that the product has at least one color."""
@@ -74,33 +77,37 @@ class Product(models.Model):
         # Skip validation for new products (not yet saved)
         if self.pk:
             if not self.colors.exists():
-                raise ValidationError("A product must have at least one color.")
+                raise ValidationError(_('يجب أن يحتوي المنتج على لون واحد على الأقل.'))
 
         super().clean()
 
     def __str__(self):
         return self.header
+    
+    class Meta:
+        verbose_name = _('المنتج')
+        verbose_name_plural = _('المنتجات')
 
 class ProductColor(models.Model):
     # Define the 10 most popular colors with their hex codes
     COLOR_CHOICES = [
-        ('FF0000', 'Red'),
-        ('0000FF', 'Blue'),
-        ('008000', 'Green'),
-        ('FFFF00', 'Yellow'),
-        ('FFA500', 'Orange'),
-        ('800080', 'Purple'),
-        ('FFC0CB', 'Pink'),
-        ('A52A2A', 'Brown'),
-        ('000000', 'Black'),
-        ('FFFFFF', 'White'),
+        ('FF0000', _('أحمر')),
+        ('0000FF', _('أزرق')),
+        ('008000', _('أخضر')),
+        ('FFFF00', _('أصفر')),
+        ('FFA500', _('برتقالي')),
+        ('800080', _('بنفسجي')),
+        ('FFC0CB', _('وردي')),
+        ('A52A2A', _('بني')),
+        ('000000', _('أسود')),
+        ('FFFFFF', _('أبيض')),
     ]
 
-    product = models.ForeignKey(Product, related_name='colors', on_delete=models.CASCADE)
-    name = models.CharField(max_length=50, choices=COLOR_CHOICES, help_text="Select a color")
-    color_code = models.CharField(max_length=7, editable=False)  # Will be set automatically based on name
-    image = models.URLField(blank=True, null=True)  # Store Imgur link as 'image'
-    is_available = models.BooleanField(default=True)
+    product = models.ForeignKey(Product, related_name='colors', on_delete=models.CASCADE, verbose_name=_('المنتج'))
+    name = models.CharField(_('اللون'), max_length=50, choices=COLOR_CHOICES, help_text=_('اختر لونًا'))
+    color_code = models.CharField(_('كود اللون'), max_length=7, editable=False)  # Will be set automatically based on name
+    image = models.URLField(_('الصورة'), blank=True, null=True)  # Store Imgur link as 'image'
+    is_available = models.BooleanField(_('متوفر'), default=True)
 
     def save(self, *args, **kwargs):
         image_file = kwargs.pop('image_file', None)
@@ -123,7 +130,7 @@ class ProductColor(models.Model):
 
         # Check if this is the last color for the product
         if self.product.colors.count() <= 1:
-            raise ValidationError("Cannot delete the last color of a product. A product must have at least one color.")
+            raise ValidationError(_('لا يمكن حذف آخر لون للمنتج. يجب أن يحتوي المنتج على لون واحد على الأقل.'))
 
         # If it's not the last color, proceed with deletion
         return super().delete(*args, **kwargs)
@@ -137,14 +144,17 @@ class ProductColor(models.Model):
 
     def __str__(self):
         return f"{self.product.header} - {self.get_color_display_name()}"
+    class Meta:
+        verbose_name = _('اللون')
+        verbose_name_plural = _('الالوان')    
 
 class Review(models.Model):
-    name = models.CharField(max_length=100)
-    job_description = models.CharField(max_length=100)
-    image = models.URLField(blank=True, null=True)  # Store Imgur link as 'image'
-    review = models.PositiveSmallIntegerField(choices=[(i, str(i)) for i in range(1, 6)])
-    feedback = models.TextField()
-    view = models.BooleanField(default=False)
+    name = models.CharField(_('الاسم'), max_length=100)
+    job_description = models.CharField(_('المسمى الوظيفي'), max_length=100)
+    image = models.URLField(_('الصورة'), blank=True, null=True)  # Store Imgur link as 'image'
+    review = models.PositiveSmallIntegerField(_('التقييم'), choices=[(i, str(i)) for i in range(1, 6)])
+    feedback = models.TextField(_('الملاحظات'))
+    view = models.BooleanField(_('مرئي'), default=False)
 
     def save(self, *args, **kwargs):
         image_file = kwargs.pop('image_file', None)
@@ -159,14 +169,22 @@ class Review(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.review}/5)"
+    
+    class Meta:
+        verbose_name = _('التقيم')
+        verbose_name_plural = _('التقيمات')
 
 class Email(models.Model):
-    name = models.CharField(max_length=100)
-    email = models.EmailField()
-    phone_number = models.CharField(max_length=20)
-    topic = models.CharField(max_length=200)
-    message = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
+    name = models.CharField(_('الاسم'), max_length=100)
+    email = models.EmailField(_('البريد الإلكتروني'))
+    phone_number = models.CharField(_('رقم الهاتف'), max_length=20)
+    topic = models.CharField(_('الموضوع'), max_length=200)
+    message = models.TextField(_('الرسالة'))
+    created_at = models.DateTimeField(_('تاريخ الإرسال'), auto_now_add=True)
 
     def __str__(self):
         return f"{self.name} - {self.topic} ({self.email})"
+    
+    class Meta:
+        verbose_name = _('الايميل')
+        verbose_name_plural = _('الايميلات')
