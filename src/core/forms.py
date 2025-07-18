@@ -1,5 +1,5 @@
 from django import forms
-from .models import Product, ProductColor, Category
+from .models import Product, ProductColor, Category, Review
 from .widgets import ColorCircleWidget
 
 class ProductAdminForm(forms.ModelForm):
@@ -51,6 +51,23 @@ class CategoryAdminForm(forms.ModelForm):
     def clean_sizes(self):
         return ','.join(self.cleaned_data['sizes'])
 
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        image_file = self.cleaned_data.get('image_upload')
+        if image_file:
+            from .utils import upload_image_to_imgur
+            instance.image = upload_image_to_imgur(image_file)
+        if commit:
+            instance.save()
+        return instance
+
+class ReviewAdminForm(forms.ModelForm):
+    image_upload = forms.FileField(required=False, label="Upload Image (will be uploaded to Imgur)")
+    
+    class Meta:
+        model = Review
+        fields = ['name', 'job_description', 'image', 'review', 'feedback', 'view']
+    
     def save(self, commit=True):
         instance = super().save(commit=False)
         image_file = self.cleaned_data.get('image_upload')

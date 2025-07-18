@@ -5,7 +5,7 @@ from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from django.conf import settings
 from .models import Category, Product, ProductColor, Review, Email
-from .forms import ProductAdminForm, ProductColorAdminForm, CategoryAdminForm
+from .forms import ProductAdminForm, ProductColorAdminForm, CategoryAdminForm, ReviewAdminForm
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
@@ -13,7 +13,14 @@ class CategoryAdmin(admin.ModelAdmin):
     list_display = ['header', 'is_active', 'created_at', 'display_sizes']
     list_filter = ['is_active']
     search_fields = ['header', 'description']
-    fields = ['header', 'description', 'image', 'image_upload', 'is_active', 'sizes']
+    fields = ['header', 'description', 'image_display', 'image_upload', 'is_active', 'sizes']
+    readonly_fields = ['image_display']
+    
+    def image_display(self, obj):
+        if obj.image:
+            return format_html('<a href="{}" target="_blank">مشاهدة الصورة الحالية</a>', obj.image)
+        return "No image uploaded"
+    image_display.short_description = _('Current Image')
 
     def display_sizes(self, obj):
         return ', '.join(obj.get_sizes_display())
@@ -104,5 +111,21 @@ admin_site.register(User, UserAdmin)
 admin_site.register(Group, GroupAdmin)
 admin_site.register(Category, CategoryAdmin)
 admin_site.register(Product, ProductAdmin)
-admin_site.register(Review)
+@admin.register(Review)
+class ReviewAdmin(admin.ModelAdmin):
+    form = ReviewAdminForm
+    list_display = ['name', 'job_description', 'review', 'view']
+    list_filter = ['review', 'view']
+    search_fields = ['name', 'job_description', 'feedback']
+    fields = ['name', 'job_description', 'image_display', 'image_upload', 'review', 'feedback', 'view']
+    readonly_fields = ['image_display']
+    
+    def image_display(self, obj):
+        if obj.image:
+            return format_html('<a href="{}" target="_blank">مشاهدة الصورة الحالية</a>', obj.image)
+        return "No image uploaded"
+    image_display.short_description = _('Current Image')
+
+# Re-register with custom admin site
+admin_site.register(Review, ReviewAdmin)
 admin_site.register(Email)
